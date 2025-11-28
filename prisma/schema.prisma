@@ -1,0 +1,36 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // МЯНЯЕМ НА POSTGRESQL ДЛЯ VERCEL
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String         @id @default(cuid())
+  email     String         @unique
+  createdAt DateTime       @default(now())
+  meters    Stressometer[]
+}
+
+model Stressometer {
+  id        String   @id @default(cuid())
+  name      String   @default("Асноўны")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  logs      Log[]
+  createdAt DateTime @default(now())
+}
+
+model Log {
+  id        String       @id @default(cuid())
+  level     Int
+  note      String?
+  tags      String // Захоўваем JSON як радок
+  meterId   String
+  meter     Stressometer @relation(fields: [meterId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+}
