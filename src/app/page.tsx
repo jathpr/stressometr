@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Send, History, BarChart3 } from "lucide-react"; // Дадаў абразок для графікаў
 import Link from "next/link";
-import { saveStressLog, getStressHistory } from "./actions"; // Імпарт з вашага actions.ts
-
+import { saveStressLog, getStressHistory } from "./actions.ts";
 // Тып павінен супадаць з тым, што вяртае getStressHistory
 type StressEntry = {
   id: string;

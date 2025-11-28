@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceArea,
 } from "recharts";
-import { getStressHistory } from "../actions"; // Імпарт з сервера
+import { getStressHistory } from "../actions.ts"; // Імпарт з сервера
 import Link from "next/link";
 import { ArrowLeft, Filter } from "lucide-react";
 
