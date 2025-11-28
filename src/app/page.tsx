@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Send, History, BarChart3 } from "lucide-react"; // Дадаў абразок для графікаў
+// Імпартуем новую функцыю deleteStressLog
+import { Send, History, BarChart3, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { saveStressLog, getStressHistory } from "./actions";
+// АБНАЎЛЕННЕ: Дадаем deleteStressLog у імпарт
+import { saveStressLog, getStressHistory, deleteStressLog } from "./actions";
+
 // Тып павінен супадаць з тым, што вяртае getStressHistory
 type StressEntry = {
   id: string;
@@ -18,12 +21,12 @@ export default function Home() {
   const [note, setNote] = useState<string>("");
   const [history, setHistory] = useState<StressEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Функцыя загрузкі дадзеных з БД
   const fetchData = async () => {
     try {
       const logs = await getStressHistory();
-      // Бярэм апошнія 5 запісаў для галоўнай (самыя свежыя зверху - reverse калі трэба)
       setHistory(logs.reverse().slice(0, 5));
     } catch (error) {
       console.error("Не ўдалося загрузіць гісторыю", error);
@@ -32,16 +35,33 @@ export default function Home() {
 
   // Загрузка пры старце
   useEffect(() => {
+    setIsMounted(true);
     fetchData();
   }, []);
 
-  // Колер
+  // Функцыя для выдалення запісу
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Вы сапраўды жадаеце выдаліць гэты запіс?")) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await deleteStressLog(id);
+      await fetchData(); // Абнаўляем спіс пасля выдалення
+    } catch (error) {
+      console.error("Памылка пры выдаленні:", error);
+      alert("Памылка пры выдаленні запісу! (Праверце кансоль)");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getColor = (value: number) => {
     const hue = ((100 - value) * 1.2).toString(10);
     return `hsl(${hue}, 80%, 50%)`;
   };
 
-  // Парсінг тэгаў
   const extractTags = (text: string) => {
     const regex = /[@#][\wа-яА-ЯёЁіІўЎ]+/g;
     const matches = text.match(regex);
@@ -53,12 +73,9 @@ export default function Home() {
     const tags = extractTags(note);
 
     try {
-      // Захоўваем у БД праз Server Action
       await saveStressLog(level, note, tags);
-
-      // Ачыстка і абнаўленне
       setNote("");
-      await fetchData(); // Абнаўляем спіс
+      await fetchData();
     } catch (error) {
       alert("Памылка захавання!");
     } finally {
@@ -66,9 +83,10 @@ export default function Home() {
     }
   };
 
+  if (!isMounted) return null; // FIX: Каб пазбегнуць гідратацыі
+
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center p-4 md:p-8 font-sans">
-      {/* Шапка з пераходам на графікі */}
       <div className="w-full max-w-4xl flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-slate-800">Стрэсометр</h1>
         <Link
@@ -81,7 +99,6 @@ export default function Home() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-12 w-full max-w-4xl items-start justify-center">
-        {/* ЛЕВАЯ ЧАСТКА */}
         <div className="flex flex-col items-center gap-6 w-full md:w-1/3">
           <div className="relative w-24 h-80 bg-slate-200 rounded-2xl border-4 border-slate-300 overflow-hidden shadow-inner">
             <div
@@ -115,7 +132,6 @@ export default function Home() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Што здарылася?"
-              // FIX: Дадаў text-slate-800 для цёмнага тэксту
               className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24 shadow-sm text-slate-800 bg-white"
             />
             <button
@@ -145,7 +161,7 @@ export default function Home() {
               {history.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50"
+                  className="flex gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md transition group" // АБНАЎЛЕННЕ: клас group для hover эфектаў
                 >
                   <div
                     className="w-2 rounded-full flex-shrink-0"
@@ -178,6 +194,14 @@ export default function Home() {
                       </div>
                     )}
                   </div>
+                  {/* КНОПКА ВЫДАЛЕННЯ (ВЕРНУТА) */}
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    disabled={loading}
+                    className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition disabled:opacity-50"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               ))}
 

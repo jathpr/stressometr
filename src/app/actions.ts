@@ -54,7 +54,14 @@ async function getOrCreateDefaultContext(): Promise<string> {
 // ---------------------------------------------------
 // Server Actions
 // ---------------------------------------------------
+export async function deleteStressLog(id: string) {
+  // 'use server' ужо ёсць уверсе файла
 
+  // У будучыні тут будзе праверка правоў карыстальніка
+  await prisma.log.delete({
+    where: { id: id },
+  });
+}
 // Захаваць новы запіс
 export async function saveStressLog(
   level: number,
