@@ -6,7 +6,6 @@ generator client {
 
 datasource db {
   provider = "postgresql" // МЯНЯЕМ НА POSTGRESQL ДЛЯ VERCEL
-  url      = env("DATABASE_URL")
 }
 
 model User {

@@ -2,6 +2,13 @@
 // npm install --save-dev prisma dotenv
 import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
+const connectionUrl = process.env.DATABASE_URL;
+
+if (!connectionUrl) {
+  throw new Error(
+    "Не знойдзена зменная асяроддзя DATABASE_URL. Праверце .env файл."
+  );
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -9,6 +16,12 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
+    // Гэта імя павінна супадаць з імем у schema.prisma (datasource db)
+    // url: connectionUrl,
     url: env("DATABASE_URL"),
   },
+
+  // datasource: {
+  //   url: env("DATABASE_URL"),
+  // },
 });
